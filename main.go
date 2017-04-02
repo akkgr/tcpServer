@@ -1,14 +1,12 @@
 package main
 
 import (
-	"bufio"
 	"crypto/rand"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"os"
-	"time"
 )
 
 const (
@@ -46,6 +44,32 @@ func handleRequest(conn net.Conn) {
 		conn.Close()
 	}()
 
+	// var buf bytes.Buffer
+	// _, err := io.Copy(&buf, conn)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// var data = buf.Bytes()
+
+	buf := make([]byte, 1024)
+	_, err := conn.Read(buf)
+	if err != nil {
+		log.Println("Error reading:", err.Error())
+	}
+
+	var action = string(buf[0:1])
+	switch action {
+	case "H":
+	case "D":
+	case "C":
+	case "U":
+	default:
+		{
+			conn.Write([]byte("Invalid message received."))
+			log.Println("Invalid message received.")
+		}
+	}
+
 	// // Make a buffer to hold incoming data.
 	// buf := make([]byte, 1024)
 	// // Read the incoming connection into the buffer.
@@ -54,22 +78,22 @@ func handleRequest(conn net.Conn) {
 	// 	log.Fatal(err)
 	// } else {
 
-	timeoutDuration := 30 * time.Second
-	bufReader := bufio.NewReader(conn)
-	for {
-		// Set a deadline for reading. Read operation will fail if no data
-		// is received after deadline.
-		conn.SetReadDeadline(time.Now().Add(timeoutDuration))
+	// timeoutDuration := 5 * time.Second
+	// bufReader := bufio.NewReader(conn)
+	// for {
+	// 	// Set a deadline for reading. Read operation will fail if no data
+	// 	// is received after deadline.
+	// 	conn.SetReadDeadline(time.Now().Add(timeoutDuration))
 
-		// Read tokens delimited by newline
-		bytes, err := bufReader.ReadBytes('\n')
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+	// 	// Read tokens delimited by newline
+	// 	bytes, err := bufReader.ReadBytes('\n')
+	// 	if err != nil {
+	// 		fmt.Println(err)
+	// 		return
+	// 	}
 
-		fmt.Printf("%s", bytes)
-	}
+	// 	fmt.Printf("%s", bytes)
+	// }
 
 	// uuid, err := newUUID()
 	// file, err := os.Create("./messages/" + uuid)
@@ -82,7 +106,6 @@ func handleRequest(conn net.Conn) {
 	// 	log.Fatal(err)
 	// }
 	// log.Println(n, "bytes sent")
-
 
 	// }
 
