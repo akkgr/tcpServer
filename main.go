@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"crypto/rand"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"os"
+	"time"
 )
 
 const (
@@ -39,6 +41,11 @@ func main() {
 
 // Handles incoming requests.
 func handleRequest(conn net.Conn) {
+
+	defer func() {
+		conn.Close()
+	}()
+
 	// // Make a buffer to hold incoming data.
 	// buf := make([]byte, 1024)
 	// // Read the incoming connection into the buffer.
@@ -46,22 +53,43 @@ func handleRequest(conn net.Conn) {
 	// if err != nil {
 	// 	log.Fatal(err)
 	// } else {
-	uuid, err := newUUID()
-	file, err := os.Create("./messages/" + uuid)
-	if err != nil {
-		log.Fatal(err)
+
+	timeoutDuration := 30 * time.Second
+	bufReader := bufio.NewReader(conn)
+	for {
+		// Set a deadline for reading. Read operation will fail if no data
+		// is received after deadline.
+		conn.SetReadDeadline(time.Now().Add(timeoutDuration))
+
+		// Read tokens delimited by newline
+		bytes, err := bufReader.ReadBytes('\n')
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		fmt.Printf("%s", bytes)
 	}
-	defer file.Close() // make sure to close the file even if we panic.
-	n, err := io.Copy(file, conn)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println(n, "bytes sent")
+
+	// uuid, err := newUUID()
+	// file, err := os.Create("./messages/" + uuid)
+	// if err != nil {
+	// 	log.Fatal(err)
 	// }
+	// defer file.Close() // make sure to close the file even if we panic.
+	// n, err := io.Copy(file, conn)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// log.Println(n, "bytes sent")
+
+
+	// }
+
 	// Send a response back to person contacting us.
-	conn.Write([]byte("Message received."))
+	//conn.Write([]byte("Message received."))
 	// Close the connection when you're done with it.
-	conn.Close()
+	//conn.Close()
 }
 
 func newUUID() (string, error) {
