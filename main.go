@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"crypto/rand"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"os"
+	"time"
 )
 
 const (
@@ -47,28 +49,60 @@ func handleRequest(conn net.Conn) {
 	// var buf bytes.Buffer
 	// _, err := io.Copy(&buf, conn)
 	// if err != nil {
+	// 	conn.Write([]byte(err.Error()))
 	// 	log.Fatal(err)
 	// }
-	// var data = buf.Bytes()
 
-	buf := make([]byte, 1024)
-	_, err := conn.Read(buf)
-	if err != nil {
-		log.Println("Error reading:", err.Error())
-	}
+	timeoutDuration := 5 * time.Second
+	bufReader := bufio.NewReader(conn)
+	for {
+		// Set a deadline for reading. Read operation will fail if no data
+		// is received after deadline.
+		conn.SetReadDeadline(time.Now().Add(timeoutDuration))
 
-	var action = string(buf[0:1])
-	switch action {
-	case "H":
-	case "D":
-	case "C":
-	case "U":
-	default:
-		{
-			conn.Write([]byte("Invalid message received."))
-			log.Println("Invalid message received.")
+		// Read tokens delimited by newline
+		data, err := bufReader.ReadBytes('\n')
+		if err != nil {
+			conn.Write([]byte(err.Error()))
+			log.Fatal(err)
 		}
+
+		// var r = bytes.NewReader(data)
+		// res, err := http.Post("http://localhost:65421/api/mobile", "application/octet-stream", r)
+		// if err != nil {
+		// 	conn.Write([]byte(err.Error()))
+		// 	log.Fatal(err)
+		// }
+
+		// content, err := ioutil.ReadAll(res.Body)
+		// res.Body.Close()
+		// if err != nil {
+		// 	conn.Write([]byte(err.Error()))
+		// 	log.Fatal(err)
+		// }
+		// conn.Write(content)
+
+		conn.Write(data)
 	}
+
+	// buf := make([]byte, 1024)
+	// _, err := conn.Read(buf)
+	// if err != nil {
+	// 	log.Println("Error reading:", err.Error())
+	// }
+
+	// var action = string(buf[0:1])
+	// switch action {
+	// case "H":
+	// case "D":
+	// case "C":
+	// case "U":
+	// default:
+	// 	{
+	// 		conn.Write([]byte("Invalid message received."))
+	// 		log.Println("Invalid message received.")
+	// 	}
+	// }
 
 	// // Make a buffer to hold incoming data.
 	// buf := make([]byte, 1024)
